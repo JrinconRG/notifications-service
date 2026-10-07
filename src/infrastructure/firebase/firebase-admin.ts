@@ -14,18 +14,24 @@ export class FirebasePushSender implements PushSender {
   private readonly messaging: Messaging;
 
   constructor() {
-    const credenciales = JSON.parse(readFileSync(env.FIREBASE_CREDENTIALS_PATH, "utf8"));
+    const contenido = env.FIREBASE_CREDENTIALS_BASE64
+      ? Buffer.from(env.FIREBASE_CREDENTIALS_BASE64, "base64").toString("utf8")
+      : readFileSync(env.FIREBASE_CREDENTIALS_PATH, "utf8");
+    const credenciales = JSON.parse(contenido);
+
     initializeApp({ credential: cert(credenciales) });
     this.messaging = getMessaging();
   }
 
   async send(tokens: string[], notification: Notification): Promise<PushResult> {
-    const resp = await this.messaging.sendEachForMulticast({
-      tokens,
-      notification: { title: notification.titulo, body: notification.cuerpo },
-      data: notification.data,
-      android: { priority: "high" },
-    });
+    const resp = await this.messaging.sendEach(
+      tokens.map((token) => ({
+        token,
+        notification: { title: notification.titulo, body: notification.cuerpo },
+        data: notification.data,
+        android: { priority: "high" },
+      })),
+    );
 
     const invalidTokens: string[] = [];
     resp.responses.forEach((r, i) => {

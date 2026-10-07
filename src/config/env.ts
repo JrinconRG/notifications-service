@@ -2,6 +2,7 @@ import "dotenv/config";
 import { z } from "zod";
 
 const schema = z.object({
+  FIREBASE_CREDENTIALS_BASE64: z.string().optional(),
   PORT: z.coerce.number().default(8083),
   SUPABASE_DB_URL: z.string().min(1),
   FIREBASE_CREDENTIALS_PATH: z.string().default("./service-account-key.json"),
